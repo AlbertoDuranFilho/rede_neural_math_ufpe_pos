@@ -96,13 +96,9 @@ Mesmos dados e mesmos pesos sorteados (sementes 0 a 4 do NumPy); acurácia nos 1
 
 A perda total na iteração 9.000 cai de 3,5–4,5 no original para 0,0002–0,0003 na rede modificada.
 
-### Verificação do backward
-
-`verifica_gradiente.py` compara cada gradiente calculado por `neural_net()` com a derivada numérica `(L(w+h) − L(w−h)) / 2h`, em 20 exemplos aleatórios. O maior erro relativo foi **1,8e-6** (em `w0`), ou seja, o backward escrito à mão está correto.
-
 ## Dificuldades encontradas
 
-1. **O gradiente de quem alimenta mais de um neurônio é uma soma.** No original, cada `y` da camada escondida vai para um único neurônio, então `grad_y0 = grad_v2 · w1[0]`. Com a 2ª camada, `y0` alimenta os neurônios 3 **e** 4, e o gradiente dele é a soma do que volta pelos dois caminhos: `grad_y0 = grad_s30·w1[0,0] + grad_s40·w1[1,0]`. Foi o ponto que mais exigiu atenção no grafo. Se só um dos termos for usado, o código roda sem erro nenhum e o problema passa despercebido. Por isso escrevi a verificação numérica.
+1. **O gradiente de quem alimenta mais de um neurônio é uma soma.** No original, cada `y` da camada escondida vai para um único neurônio, então `grad_y0 = grad_v2 · w1[0]`. Com a 2ª camada, `y0` alimenta os neurônios 3 **e** 4, e o gradiente dele é a soma do que volta pelos dois caminhos: `grad_y0 = grad_s30·w1[0,0] + grad_s40·w1[1,0]`. Foi o ponto que mais exigiu atenção no grafo. Se só um dos termos for usado, o código roda sem erro nenhum e o problema passa despercebido. Quem confirma que a soma está certa é a comparação com o Keras: com um termo faltando, os pesos finais das duas redes não coincidiriam.
 
 2. **Tamanho do código.** Com 20 pesos no lugar de 9, o forward e o backward "hardcoded" ficaram bem mais longos (o forward aparece duas vezes, em `run_neural_net` e `neural_net`, como no original), e é fácil trocar um índice (`w1[1,0]` por `w1[0,1]`). Numerar os neurônios em sequência (0 a 5) e usar esses números nos nomes (`s30`, `s41`…) ajudou a manter o código e o grafo coerentes.
 
@@ -126,14 +122,12 @@ python -m venv .venv
 pip install -r requirements.txt
 
 python rede_neural.py          # treina a rede manual e o Keras (~40 s)
-python verifica_gradiente.py   # confere o backward com diferenças finitas
 python gera_figuras.py         # recria as figuras de arquitetura e do grafo
 ```
 
 ## Arquivos
 
-| Arquivo                 | Conteúdo                                                           |
-| ----------------------- | ------------------------------------------------------------------ |
-| `rede_neural.py`        | Rede modificada + comparação com Keras                             |
-| `verifica_gradiente.py` | Verificação numérica do backward                                   |
-| `gera_figuras.py`       | Gera `figuras/arquitetura.png` e `figuras/grafo_computacional.png` |
+| Arquivo           | Conteúdo                                                           |
+| ----------------- | ------------------------------------------------------------------ |
+| `rede_neural.py`  | Rede modificada + comparação com Keras                             |
+| `gera_figuras.py` | Gera `figuras/arquitetura.png` e `figuras/grafo_computacional.png` |
