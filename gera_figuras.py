@@ -1,14 +1,3 @@
-"""
-Gera as figuras do relatório:
-  figuras/arquitetura.png          - arquitetura da rede 2 -> 3 -> 2 -> 1
-  figuras/grafo_computacional.png  - grafo de computação completo, com o nome
-                                     de cada variável (forward, em cinza) e o
-                                     gradiente que volta por ela (backward, em
-                                     vermelho), usando os mesmos nomes do
-                                     rede_neural.py
-
-Uso:  python gera_figuras.py
-"""
 import os
 
 import matplotlib
@@ -27,9 +16,7 @@ LARANJA = '#eb6834'    # sigmoide (saída)
 GRAD = '#b3261e'       # gradientes (backward)
 
 
-# ------------------------------------------------------------------ util
 def _ponta(p, q, r):
-    """Ponto na borda de um nó de raio r em p, na direção de q."""
     p, q = np.asarray(p, float), np.asarray(q, float)
     d = q - p
     return p + d / np.linalg.norm(d) * r
@@ -128,14 +115,14 @@ def arquitetura():
     plt.close(fig)
 
 
-# ---------------------------------------------------- grafo computacional
+# grafo computacional
 def grafo():
     fig, ax = plt.subplots(figsize=(28, 13.5))
     fig.patch.set_facecolor(FUNDO)
     ax.set_facecolor(FUNDO)
-    R = 0.3            # raio dos nós de operação
-    BW, BH = 0.95, 0.42  # caixa das ativações
-    RB = 0.5           # "raio" aproximado da caixa, para as setas
+    R = 0.3            
+    BW, BH = 0.95, 0.42 
+    RB = 0.5        
 
     def op(pos, s):
         ax.add_patch(Circle(pos, R, facecolor=FUNDO, edgecolor=AZUL, lw=1.4,
@@ -152,11 +139,10 @@ def grafo():
                 zorder=4)
 
     def entrada(q, cima, baixo, dx=-1.1, dy=0.45):
-        """Seta 'solta' que entra num nó (peso, x, bias ou d)."""
         p = (q[0] + dx, q[1] + dy)
         seta(ax, p, q, 0, R, cima, baixo, t=0.45)
 
-    # ---------------- 1ª camada escondida (neurônios 0, 1, 2)
+    # 1ª camada escondida 
     Y1 = {0: 11.0, 1: 7.0, 2: 3.0}
     X_MUL1, X_SOM1, X_BIAS1, X_ACT1, X_RAMO1 = 1.6, 3.2, 4.6, 6.6, 7.9
     ramo = {}
@@ -179,7 +165,7 @@ def grafo():
         seta(ax, at, rp, RB, 0.07, f'y{j}', '')
         ramo[j] = rp
 
-    # ---------------- 2ª camada escondida (neurônios 3, 4)
+    # 2ª camada escondida
     Y2 = {3: 9.4, 4: 4.6}
     X_MUL2, X_SOM2, X_BIAS2, X_ACT2 = 11.4, 13.2, 14.6, 16.6
     for k, yc in Y2.items():
@@ -187,8 +173,6 @@ def grafo():
         sm, bs, at = (X_SOM2, yc), (X_BIAS2, yc), (X_ACT2, yc)
         for j, m in muls.items():
             op(m, '×')
-            # arestas retas (mesma altura) têm rótulo no meio; as diagonais,
-            # que se cruzam, têm rótulo perto da origem (onde ainda não se cruzam)
             reta = abs(ramo[j][1] - m[1]) < 1.6
             seta(ax, ramo[j], m, 0.07, R, f'y{j}',
                  f'grad_s{k}{j}·w1[{k - 3},{j}]', t=0.5 if reta else 0.2)
@@ -201,7 +185,7 @@ def grafo():
         entrada(bs, f'b1[{k - 3}]', f'grad_v{k}', dx=-0.45, dy=1.0)
         seta(ax, bs, at, R, RB, f'v{k}', f'grad_y{k}·(1−y{k}²)')
 
-    # ---------------- saída (neurônio 5) e perda
+    # saída
     X_MUL3, X_SOM3, X_BIAS3, X_ACT3, X_ERR, X_L = 18.9, 20.5, 21.9, 24.0, 25.7, 27.2
     YS = 7.0
     mo = {3: (X_MUL3, 8.4), 4: (X_MUL3, 5.6)}
@@ -226,7 +210,7 @@ def grafo():
     seta(ax, (lo[0] + 0.42, lo[1]), (lo[0] + 1.3, lo[1]), 0, 0, 'L',
          'grad_L = 1')
 
-    # ---------------- títulos e legenda
+    # títulos e legenda
     for x, t in ((4.1, '1ª camada escondida (tanh)'),
                  (14.0, '2ª camada escondida (tanh)'),
                  (23.3, 'saída (sigmoide) e perda')):
