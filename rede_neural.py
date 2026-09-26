@@ -7,18 +7,6 @@ from keras.layers import Dense
 from keras.optimizers import SGD
 from keras import initializers
 
-# MODIFICAÇÕES em relação ao original (2 -> 2 -> 1, sigmoide):
-#   - arquitetura 2 -> 3 -> 2 -> 1: uma camada escondida a mais e um neurônio
-#     a mais na primeira camada escondida
-#   - tangente hiperbólica (tanh) nas camadas escondidas; a saída continua
-#     sigmoide, porque a classe é 0 ou 1
-#   - modelo Keras com a mesma arquitetura, os mesmos pesos iniciais e o mesmo
-#     passo de gradiente, para verificar se as duas redes são equivalentes
-#
-# Numeração dos neurônios: 0, 1, 2 (1ª camada escondida), 3, 4 (2ª camada
-# escondida) e 5 (saída). Pesos: w0 (3x2) e b0 (3) da 1ª camada, w1 (2x3) e
-# b1 (2) da 2ª camada, w2 (2) e b2 (1) da saída.
-
 X, Y = datasets.make_moons(100, noise=0.1)
 
 color = ['blue' if k == 0 else 'red' for k in Y]
@@ -31,8 +19,6 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-# MODIFICAÇÃO: nova função de ativação das camadas escondidas.
-# Derivada: d tanh(v) / dv = 1 - tanh(v)^2 = 1 - y^2
 def tanh(x):
     return np.tanh(x)
 
@@ -139,7 +125,7 @@ def neural_net(x, d, w0, b0, w1, b1, w2, b2):
     grad_L = 1
     grad_e = grad_L * e
 
-    # saída (sigmoide): derivada y * (1 - y)
+    # saída
     grad_y5 = grad_e
     grad_v5 = grad_y5 * y5 * (1 - y5)
     grad_b2[0] = grad_v5
@@ -151,7 +137,7 @@ def neural_net(x, d, w0, b0, w1, b1, w2, b2):
     grad_w2[1] = grad_s51 * y4
     grad_y4 = grad_s51 * w2[1]
 
-    # 2ª camada escondida (tanh): derivada 1 - y^2
+    # 2ª camada escondida
     grad_v3 = grad_y3 * (1 - y3 ** 2)
     grad_v4 = grad_y4 * (1 - y4 ** 2)
 
@@ -174,13 +160,10 @@ def neural_net(x, d, w0, b0, w1, b1, w2, b2):
     grad_w1[1, 1] = grad_s41 * y1
     grad_w1[1, 2] = grad_s42 * y2
 
-    # cada y da 1ª camada alimenta os DOIS neurônios da 2ª camada,
-    # então o gradiente dele é a soma dos gradientes que voltam dos dois
     grad_y0 = grad_s30 * w1[0, 0] + grad_s40 * w1[1, 0]
     grad_y1 = grad_s31 * w1[0, 1] + grad_s41 * w1[1, 1]
     grad_y2 = grad_s32 * w1[0, 2] + grad_s42 * w1[1, 2]
 
-    # 1ª camada escondida (tanh): derivada 1 - y^2
     grad_v0 = grad_y0 * (1 - y0 ** 2)
     grad_v1 = grad_y1 * (1 - y1 ** 2)
     grad_v2 = grad_y2 * (1 - y2 ** 2)
@@ -215,10 +198,8 @@ def main():
     b1 = np.random.rand(2)
     b2 = np.random.rand(1)
 
-    # MODIFICAÇÃO: guarda os pesos iniciais para o Keras começar do mesmo ponto
     iniciais = [w0.copy(), b0.copy(), w1.copy(), b1.copy(), w2.copy(), b2.copy()]
 
-    # taxa de aprendizado
     taxa = 0.1
 
     acc = 0
@@ -260,7 +241,6 @@ def main():
         if i % 1000 == 0:
             print(i, loss)
 
-    # acurácia após o treinamento
     acc = 0
     for i in range(100):
         out = run_neural_net(X[i], w0, b0, w1, b1, w2, b2)
@@ -268,31 +248,19 @@ def main():
             acc += 1
     print('acc', acc)
 
-    # MODIFICAÇÃO: Keras com a mesma arquitetura 2 -> 3 -> 2 -> 1
-    # float64 (padrão do Keras é float32) para fazer as contas com a mesma
-    # precisão do NumPy e poder comparar os pesos finais
     keras.config.set_floatx('float64')
     model = Sequential()
     model.add(Dense(3, input_dim=2, activation='tanh'))
     model.add(Dense(2, activation='tanh'))
     model.add(Dense(1, activation='sigmoid'))
 
-    # mesmos pesos iniciais da rede manual. O Keras guarda a matriz de pesos
-    # como (entradas, neurônios), o transposto da nossa (neurônios, entradas)
     w0_i, b0_i, w1_i, b1_i, w2_i, b2_i = iniciais
     model.set_weights([w0_i.T, b0_i, w1_i.T, b1_i, w2_i.reshape(2, 1), b2_i])
 
-    # mesmo passo de gradiente: a rede manual SOMA o gradiente de 1/2 e^2 dos
-    # 100 exemplos; o Keras faz a MÉDIA de e^2, cuja derivada é 2e / 100.
-    # Para os passos serem iguais: taxa_keras * 2 / 100 = taxa
-    #   ->  taxa_keras = taxa * 100 / 2 = 5
     taxa_keras = taxa * len(X) / 2
     opt = SGD(learning_rate=taxa_keras)
     model.compile(loss='mean_squared_error', optimizer=opt, metrics=['accuracy'])
-    # 10.000 passos com a base inteira (100 exemplos), como no laço manual.
-    # epochs=10000 funciona, mas leva ~10 min pelo custo fixo de cada época no
-    # Keras; repetir a base 10.000 vezes, sem embaralhar, e treinar 1 época com
-    # lotes de 100 dá exatamente os mesmos passos em poucos segundos
+
     model.fit(np.tile(X, (10000, 1)), np.tile(Y, 10000), epochs=1,
               batch_size=len(X), shuffle=False, verbose=False)
 
