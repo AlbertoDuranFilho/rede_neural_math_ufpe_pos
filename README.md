@@ -3,17 +3,17 @@
 **Disciplina:** Matemática para Ciência de Dados, Pós-graduação em ML, UFPE
 **Professor:** Adenilton José da Silva
 
-Partimos do arquivo `rede_neural.py` apresentado em aula (rede **2 → 2 → 1** com sigmoide, forward e backward escritos à mão e comparação com Keras). Mantivemos o mesmo esqueleto e a mesma forma de implementar, **"hardcoded"**: cada soma, multiplicação e derivada é uma linha de código. As modificações foram:
+Parti do arquivo `exemplo4.py` apresentado em aula (rede **2 → 2 → 1** com sigmoide, forward e backward escritos à mão e comparação com Keras). Mantivemos o mesmo esqueleto e a mesma forma de implementar, **"hardcoded"**: cada soma, multiplicação e derivada é uma linha de código. As modificações foram:
 
-| | Original | Modificado |
-|---|---|---|
-| Arquitetura | 2 → 2 → 1 | **2 → 3 → 2 → 1** |
-| Camadas escondidas | 1 | **2** (uma camada a mais) |
-| Neurônios escondidos | 2 | **3 e 2** (um neurônio a mais na 1ª camada) |
-| Ativação das camadas escondidas | sigmoide | **tangente hiperbólica (tanh)** |
-| Ativação da saída | sigmoide | sigmoide (mantida, porque a classe é 0 ou 1) |
-| Pesos treináveis | 9 | 20 |
-| Keras | arquitetura diferente (5 relu → 5 tanh → 1), treinado à parte | **mesma arquitetura, mesmos pesos iniciais e mesmo passo de gradiente**, com comparação dos pesos finais |
+|                                 | Original                                                      | Modificado                                                                                               |
+| ------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Arquitetura                     | 2 → 2 → 1                                                     | **2 → 3 → 2 → 1**                                                                                        |
+| Camadas escondidas              | 1                                                             | **2** (uma camada a mais)                                                                                |
+| Neurônios escondidos            | 2                                                             | **3 e 2** (um neurônio a mais na 1ª camada)                                                              |
+| Ativação das camadas escondidas | sigmoide                                                      | **tangente hiperbólica (tanh)**                                                                          |
+| Ativação da saída               | sigmoide                                                      | sigmoide (mantida, porque a classe é 0 ou 1)                                                             |
+| Pesos treináveis                | 9                                                             | 20                                                                                                       |
+| Keras                           | arquitetura diferente (5 relu → 5 tanh → 1), treinado à parte | **mesma arquitetura, mesmos pesos iniciais e mesmo passo de gradiente**, com comparação dos pesos finais |
 
 Base de dados, função de perda (`L = ½e²`), inicialização (`np.random.rand`), taxa de aprendizado (0,1) e número de iterações (10.000) ficaram iguais ao original, para que a diferença de resultado venha só das modificações.
 
@@ -23,11 +23,11 @@ Base de dados, função de perda (`L = ½e²`), inicialização (`np.random.rand
 
 Os neurônios são numerados em sequência: **0, 1, 2** na 1ª camada escondida, **3, 4** na 2ª e **5** na saída. Os pesos seguem a organização da aula, uma matriz por camada, com linha = neurônio e coluna = entrada:
 
-| Parâmetro | Formato | Liga |
-|---|---|---|
-| `w0`, `b0` | 3×2, 3 | entradas → 1ª camada escondida |
-| `w1`, `b1` | 2×3, 2 | 1ª → 2ª camada escondida |
-| `w2`, `b2` | 2, 1 | 2ª camada escondida → saída |
+| Parâmetro  | Formato | Liga                           |
+| ---------- | ------- | ------------------------------ |
+| `w0`, `b0` | 3×2, 3  | entradas → 1ª camada escondida |
+| `w1`, `b1` | 2×3, 2  | 1ª → 2ª camada escondida       |
+| `w2`, `b2` | 2, 1    | 2ª camada escondida → saída    |
 
 ## 2. Grafo de computação
 
@@ -79,6 +79,7 @@ maior diferença entre os pesos finais (manual x keras): 2.5081986265718115e-08
 Execução completa em cerca de 40 s. A rede manual e o Keras acertam os 100 pontos. Como os dois partem dos mesmos pesos e dão os mesmos passos, os **pesos finais coincidem até a 8ª casa decimal**, o que confirma que a implementação manual calcula o mesmo que o Keras.
 
 Para as duas redes serem comparáveis passo a passo:
+
 - **Mesmos pesos iniciais:** os pesos sorteados para a rede manual são copiados para o Keras com `set_weights`, transpostos, porque o Keras guarda a matriz como (entradas × neurônios).
 - **Mesmo passo:** a rede manual soma o gradiente de `½e²` nos 100 exemplos e usa taxa 0,1. O `mean_squared_error` do Keras é a média de `e²`, com derivada `2e/100`. Para os passos serem iguais, a taxa do Keras precisa ser `0,1 × 100 / 2 = 5`.
 - **Mesmo lote:** a base inteira a cada passo (`batch_size=100`), sem embaralhar, por 10.000 passos.
@@ -88,10 +89,10 @@ Para as duas redes serem comparáveis passo a passo:
 
 Mesmos dados e mesmos pesos sorteados (sementes 0 a 4 do NumPy); acurácia nos 100 pontos de treino, como no código original:
 
-| Semente | 0 | 1 | 2 | 3 | 4 | Média |
-|---|---|---|---|---|---|---|
-| Original 2-2-1 sigmoide | 91% | 87% | 89% | 90% | 89% | **89,2%** |
-| Modificado 2-3-2-1 tanh | 100% | 100% | 100% | 100% | 100% | **100%** |
+| Semente                 | 0    | 1    | 2    | 3    | 4    | Média     |
+| ----------------------- | ---- | ---- | ---- | ---- | ---- | --------- |
+| Original 2-2-1 sigmoide | 91%  | 87%  | 89%  | 90%  | 89%  | **89,2%** |
+| Modificado 2-3-2-1 tanh | 100% | 100% | 100% | 100% | 100% | **100%**  |
 
 A perda total na iteração 9.000 cai de 3,5–4,5 no original para 0,0002–0,0003 na rede modificada.
 
@@ -101,7 +102,7 @@ A perda total na iteração 9.000 cai de 3,5–4,5 no original para 0,0002–0,0
 
 ## Dificuldades encontradas
 
-1. **O gradiente de quem alimenta mais de um neurônio é uma soma.** No original, cada `y` da camada escondida vai para um único neurônio, então `grad_y0 = grad_v2 · w1[0]`. Com a 2ª camada, `y0` alimenta os neurônios 3 **e** 4, e o gradiente dele é a soma do que volta pelos dois caminhos: `grad_y0 = grad_s30·w1[0,0] + grad_s40·w1[1,0]`. Foi o ponto que mais exigiu atenção no grafo. Se só um dos termos for usado, o código roda sem erro nenhum e o problema passa despercebido. Por isso escrevemos a verificação numérica.
+1. **O gradiente de quem alimenta mais de um neurônio é uma soma.** No original, cada `y` da camada escondida vai para um único neurônio, então `grad_y0 = grad_v2 · w1[0]`. Com a 2ª camada, `y0` alimenta os neurônios 3 **e** 4, e o gradiente dele é a soma do que volta pelos dois caminhos: `grad_y0 = grad_s30·w1[0,0] + grad_s40·w1[1,0]`. Foi o ponto que mais exigiu atenção no grafo. Se só um dos termos for usado, o código roda sem erro nenhum e o problema passa despercebido. Por isso escrevi a verificação numérica.
 
 2. **Tamanho do código.** Com 20 pesos no lugar de 9, o forward e o backward "hardcoded" ficaram bem mais longos (o forward aparece duas vezes, em `run_neural_net` e `neural_net`, como no original), e é fácil trocar um índice (`w1[1,0]` por `w1[0,1]`). Numerar os neurônios em sequência (0 a 5) e usar esses números nos nomes (`s30`, `s41`…) ajudou a manter o código e o grafo coerentes.
 
@@ -109,15 +110,13 @@ A perda total na iteração 9.000 cai de 3,5–4,5 no original para 0,0002–0,0
 
 4. **Pesos transpostos.** O `set_weights` do Keras espera cada matriz como (entradas × neurônios), e o nosso `w0[j, i]` é (neurônios × entradas). Sem transpor, o Keras recusa as matrizes 3×2 e 2×3 por erro de formato; numa matriz quadrada, como a 2×2 do original, os pesos seriam trocados sem nenhum aviso.
 
-5. **Diferença de precisão.** Mesmo com tudo igual, os pesos finais diferiam entre 0,02 e 0,1 (conforme a semente) com o Keras no padrão `float32`. Para descobrir se era erro de conta ou de precisão, comparamos após **um único passo** em `float64`: diferença de 2,8e-16, o limite da máquina. Então as contas são iguais, e a diferença vem de arredondamento que se acumula em 10.000 passos, com os passos grandes do início amplificando os erros (a perda começa em 16). Com o Keras em `float64`, a diferença final caiu para 2,5e-8.
+5. **Diferença de precisão.** Mesmo com tudo igual, os pesos finais diferiam entre 0,02 e 0,1 (conforme a semente) com o Keras no padrão `float32`. Para descobrir se era erro de conta ou de precisão, comparei após **um único passo** em `float64`: diferença de 2,8e-16, o limite da máquina. Então as contas são iguais, e a diferença vem de arredondamento que se acumula em 10.000 passos, com os passos grandes do início amplificando os erros (a perda começa em 16). Com o Keras em `float64`, a diferença final caiu para 2,5e-8.
 
 6. **Keras lento com 10.000 épocas.** `model.fit(..., epochs=10000)` levou cerca de 10 minutos, porque cada época tem um custo fixo no Keras. A solução foi repetir a base 10.000 vezes (`np.tile`), sem embaralhar, e treinar 1 época com lotes de 100. Cada lote é exatamente a base inteira, então os passos são idênticos, e o tempo caiu para cerca de 12 segundos.
 
-7. **Instalação do TensorFlow no Windows.** A primeira importação falhou com *"O arquivo de paginação é muito pequeno para que esta operação seja concluída"*: faltou memória virtual para carregar as DLLs do TensorFlow enquanto outros treinos rodavam em paralelo. Com a máquina livre, carregou normalmente.
+7. **Tempo de treino da rede manual.** Como tudo é Python puro, exemplo a exemplo, o treino passou de ~20–30 s para ~40 s. Isso reforça o que foi dito em aula sobre usar bases pequenas nessa implementação.
 
-8. **Tempo de treino da rede manual.** Como tudo é Python puro, exemplo a exemplo, o treino passou de ~20–30 s para ~40 s. Isso reforça o que foi dito em aula sobre usar bases pequenas nessa implementação.
-
-9. **Acurácia medida no treino.** Mantivemos a avaliação do original, nos mesmos 100 pontos usados para treinar. Os 100% mostram que a rede consegue separar as luas, mas não medem generalização; para isso seria preciso separar um conjunto de teste.
+8. **Acurácia medida no treino.** Mantive a avaliação do original, nos mesmos 100 pontos usados para treinar. Os 100% mostram que a rede consegue separar as luas, mas não medem generalização; para isso seria preciso separar um conjunto de teste.
 
 ## Como executar
 
@@ -133,14 +132,8 @@ python gera_figuras.py         # recria as figuras de arquitetura e do grafo
 
 ## Arquivos
 
-| Arquivo | Conteúdo |
-|---|---|
-| `rede_neural.py` | Rede modificada (esqueleto da aula) + comparação com Keras |
-| `verifica_gradiente.py` | Verificação numérica do backward |
-| `gera_figuras.py` | Gera `figuras/arquitetura.png` e `figuras/grafo_computacional.png` |
-
-A versão original do `rede_neural.py` está no primeiro commit do histórico.
-
-## Integrantes
-
-- _(preencher)_
+| Arquivo                 | Conteúdo                                                           |
+| ----------------------- | ------------------------------------------------------------------ |
+| `rede_neural.py`        | Rede modificada + comparação com Keras                             |
+| `verifica_gradiente.py` | Verificação numérica do backward                                   |
+| `gera_figuras.py`       | Gera `figuras/arquitetura.png` e `figuras/grafo_computacional.png` |
